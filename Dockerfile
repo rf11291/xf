@@ -12,4 +12,4 @@ COPY app ./app
 COPY README.md .
 COPY .env.example .
 
-CMD ["python", "-m", "app.main"]
+CMD ["python", "-m", "app.web"]

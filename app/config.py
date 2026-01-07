@@ -12,11 +12,14 @@ def _get(name: str, default: str | None = None) -> str:
 
 @dataclass(frozen=True)
 class Config:
-    bot_token: str
-    admin_ids: set[int]
+    admin_user: str
+    admin_password: str
+    secret_key: str
     tz: str
     database_path: str
     company_name: str
+    contact_name: str
+    contact_url: str
 
     smtp_host: str
     smtp_port: int
@@ -27,19 +30,15 @@ class Config:
     scan_interval_minutes: int
 
 def load_config() -> Config:
-    admin_raw = _get("ADMIN_IDS", "")
-    admin_ids: set[int] = set()
-    for x in admin_raw.split(","):
-        x = x.strip()
-        if x:
-            admin_ids.add(int(x))
-
     return Config(
-        bot_token=_get("BOT_TOKEN"),
-        admin_ids=admin_ids,
+        admin_user=_get("ADMIN_USER", "admin"),
+        admin_password=_get("ADMIN_PASSWORD", "admin"),
+        secret_key=_get("SECRET_KEY", "change-me"),
         tz=_get("TZ", "Europe/Berlin"),
         database_path=_get("DATABASE_PATH", "./data/bot.db"),
         company_name=_get("COMPANY_NAME", "YourCompany"),
+        contact_name=_get("CONTACT_NAME", "客服"),
+        contact_url=_get("CONTACT_URL", "mailto:support@example.com"),
 
         smtp_host=_get("SMTP_HOST"),
         smtp_port=int(_get("SMTP_PORT", "587")),

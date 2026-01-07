@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+{% block content %}
+<h2 class="mb-3">编辑订阅 #{{ sub.id }}</h2>
+<div class="card shadow-sm">
+  <div class="card-body">
+    <div class="mb-3 text-muted">
+      客户：{{ sub.customer_name or "-" }} ({{ sub.customer_email }})<br />
+      产品：{{ sub.product_name }}
+    </div>
+    <form class="row g-3" method="post">
+      <div class="col-md-4">
+        <label class="form-label">到期日</label>
+        <input class="form-control" name="expires_at" type="date" value="{{ sub.expires_at }}" required />
+      </div>
+      <div class="col-md-8">
+        <label class="form-label">备注</label>
+        <input class="form-control" name="note" value="{{ sub.note or '' }}" />
+      </div>
+      <div class="col-12">
+        <button class="btn btn-primary" type="submit">保存</button>
+        <a class="btn btn-outline-secondary" href="{{ url_for('subscriptions') }}">返回</a>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}

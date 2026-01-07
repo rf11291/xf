@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+{% block content %}
+<h2 class="mb-3">编辑客户 #{{ customer.id }}</h2>
+<div class="card shadow-sm">
+  <div class="card-body">
+    <form class="row g-3" method="post">
+      <div class="col-md-6">
+        <label class="form-label">邮箱</label>
+        <input class="form-control" name="email" value="{{ customer.email }}" required />
+      </div>
+      <div class="col-md-6">
+        <label class="form-label">姓名</label>
+        <input class="form-control" name="name" value="{{ customer.name or '' }}" />
+      </div>
+      <div class="col-12">
+        <button class="btn btn-primary" type="submit">保存</button>
+        <a class="btn btn-outline-secondary" href="{{ url_for('customers') }}">返回</a>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}

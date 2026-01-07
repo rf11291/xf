@@ -1,0 +1,67 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="d-flex align-items-center justify-content-between mb-4">
+  <div>
+    <h2 class="mb-1">仪表盘</h2>
+    <div class="text-muted">系统概览与即将到期提醒</div>
+  </div>
+  <a class="btn btn-outline-primary" href="{{ url_for('subscriptions') }}">查看全部订阅</a>
+</div>
+
+<div class="row g-3 mb-4">
+  <div class="col-md-4">
+    <div class="stat-card">
+      <div class="stat-title">客户数</div>
+      <div class="stat-value">{{ total_customers }}</div>
+    </div>
+  </div>
+  <div class="col-md-4">
+    <div class="stat-card">
+      <div class="stat-title">产品数</div>
+      <div class="stat-value">{{ total_products }}</div>
+    </div>
+  </div>
+  <div class="col-md-4">
+    <div class="stat-card">
+      <div class="stat-title">订阅数</div>
+      <div class="stat-value">{{ total_subs }}</div>
+    </div>
+  </div>
+</div>
+
+<div class="card shadow-sm">
+  <div class="card-header bg-white">
+    <strong>30 天内到期</strong>
+  </div>
+  <div class="card-body p-0">
+    <table class="table table-hover mb-0">
+      <thead class="table-light">
+        <tr>
+          <th>客户</th>
+          <th>产品</th>
+          <th>到期日</th>
+          <th>剩余天数</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for item in expiring_soon %}
+        <tr>
+          <td>{{ item.customer_name or "-" }}<br><small class="text-muted">{{ item.customer_email }}</small></td>
+          <td>{{ item.product_name }}</td>
+          <td>{{ item.expires_at }}</td>
+          <td>
+            <span class="badge {% if item.days_left <= 3 %}bg-danger{% elif item.days_left <= 7 %}bg-warning text-dark{% else %}bg-success{% endif %}">
+              {{ item.days_left }} 天
+            </span>
+          </td>
+        </tr>
+        {% else %}
+        <tr>
+          <td colspan="4" class="text-center text-muted py-4">暂无即将到期订阅</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

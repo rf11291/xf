@@ -1,0 +1,34 @@
+{% extends "base.html" %}
+{% block content %}
+<h2 class="mb-3">提醒日志</h2>
+<div class="card shadow-sm">
+  <div class="card-body p-0">
+    <table class="table table-hover mb-0">
+      <thead class="table-light">
+        <tr>
+          <th>发送日期</th>
+          <th>发送时间</th>
+          <th>客户</th>
+          <th>产品</th>
+          <th>到期日</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for item in items %}
+        <tr>
+          <td>{{ item.sent_date }}</td>
+          <td>{{ item.sent_at }}</td>
+          <td>{{ item.customer_name or "-" }}<br><small class="text-muted">{{ item.customer_email }}</small></td>
+          <td>{{ item.product_name }}</td>
+          <td>{{ item.expires_at }}</td>
+        </tr>
+        {% else %}
+        <tr>
+          <td colspan="5" class="text-center text-muted py-4">暂无提醒日志</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

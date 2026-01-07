@@ -74,7 +74,7 @@ DEFAULT_TEMPLATE = {
 <p>距离到期还剩 <b>{{ days_left }}</b> 天。</p>
 {% if product.content %}<p>备注：{{ product.content }}</p>{% endif %}
 <hr/>
-<p>如需继续续费使用，请联系 <a href="https://t.me/Stance9_bot" target="_blank" rel="noopener noreferrer">Telegram</a>。</p>
+<p>如需继续续费使用，请联系 <a href="{{ contact_url }}" target="_blank" rel="noopener noreferrer">{{ contact_name }}</a>。</p>
 <p>— {{ company }}</p>
 '''
 }
@@ -254,6 +254,19 @@ class Database:
             conn.execute("DELETE FROM customers WHERE id=?", (customer_id,))
             conn.commit()
 
+    def update_customer(self, customer_id: int, email: str, name: str | None) -> bool:
+        email = email.strip().lower()
+        with self._conn() as conn:
+            try:
+                conn.execute(
+                    "UPDATE customers SET email=?, name=? WHERE id=?",
+                    (email, name, customer_id),
+                )
+                conn.commit()
+                return True
+            except sqlite3.IntegrityError:
+                return False
+
     # ---------------- product catalog ----------------
     def upsert_product(self, name: str, content: str | None, conn: sqlite3.Connection | None = None) -> int:
         close = False
@@ -312,6 +325,19 @@ class Database:
             conn.commit()
             return True
 
+    def update_product(self, product_id: int, name: str, content: str | None) -> bool:
+        name = name.strip()
+        with self._conn() as conn:
+            try:
+                conn.execute(
+                    "UPDATE products SET name=?, content=? WHERE id=?",
+                    (name, content, product_id),
+                )
+                conn.commit()
+                return True
+            except sqlite3.IntegrityError:
+                return False
+
     # ---------------- subscriptions ----------------
     def add_subscription(
         self,
@@ -339,6 +365,14 @@ class Database:
     def update_subscription_expires(self, subscription_id: int, new_expires_at: str) -> None:
         with self._conn() as conn:
             conn.execute("UPDATE subscriptions SET expires_at=? WHERE id=?", (new_expires_at, subscription_id))
+            conn.commit()
+
+    def update_subscription(self, subscription_id: int, new_expires_at: str, note: str | None) -> None:
+        with self._conn() as conn:
+            conn.execute(
+                "UPDATE subscriptions SET expires_at=?, note=? WHERE id=?",
+                (new_expires_at, note, subscription_id),
+            )
             conn.commit()
 
     def delete_subscription(self, subscription_id: int) -> None:
@@ -406,6 +440,25 @@ class Database:
             if 0 <= (exp - today).days <= days:
                 res.append(s)
         return res[offset:offset+limit]
+
+    def list_reminder_daily_logs(self, offset: int = 0, limit: int = 50) -> list[dict[str, Any]]:
+        with self._conn() as conn:
+            rows = conn.execute(
+                '''
+                SELECT r.sent_date, r.sent_at, r.subscription_id,
+                       c.email AS customer_email, c.name AS customer_name,
+                       p.name AS product_name,
+                       s.expires_at
+                FROM reminder_daily_sends r
+                JOIN subscriptions s ON s.id=r.subscription_id
+                JOIN customers c ON c.id=s.customer_id
+                JOIN products p ON p.id=s.product_id
+                ORDER BY r.sent_at DESC
+                LIMIT ? OFFSET ?
+                ''',
+                (limit, offset),
+            ).fetchall()
+            return [dict(r) for r in rows]
 
     # ---------------- reminder sends ----------------
     def was_sent(self, subscription_id: int, days_before: int) -> bool:
