@@ -40,6 +40,7 @@ def send_html_email(
     to_email: str,
     subject: str,
     html_body: str,
+    timeout_seconds: int = 30,
 ) -> None:
     """
     Sends a standards-compliant email:
@@ -74,14 +75,15 @@ def send_html_email(
     # Better EHLO than container hostname: use from-domain if possible
     local_hostname = msgid_domain or None
 
+    timeout = int(timeout_seconds)
     if int(smtp_port) == 465:
-        with smtplib.SMTP_SSL(smtp_host, int(smtp_port), timeout=30, local_hostname=local_hostname) as server:
+        with smtplib.SMTP_SSL(smtp_host, int(smtp_port), timeout=timeout, local_hostname=local_hostname) as server:
             server.ehlo()
             if smtp_user:
                 server.login(smtp_user, smtp_pass)
             server.sendmail(envelope_from, [to_email], msg.as_bytes())
     else:
-        with smtplib.SMTP(smtp_host, int(smtp_port), timeout=30, local_hostname=local_hostname) as server:
+        with smtplib.SMTP(smtp_host, int(smtp_port), timeout=timeout, local_hostname=local_hostname) as server:
             server.ehlo()
             try:
                 server.starttls()

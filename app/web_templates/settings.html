@@ -1,0 +1,54 @@
+{% extends "base.html" %}
+{% block content %}
+<h2 class="mb-3">提醒规则 & 模板</h2>
+
+<div class="row g-3">
+  <div class="col-lg-8">
+    <div class="card shadow-sm mb-3">
+      <div class="card-header bg-white">
+        <strong>提醒规则与模板</strong>
+      </div>
+      <div class="card-body">
+        <form method="post">
+          <div class="mb-3">
+            <label class="form-label">提醒规则（JSON 数组，例如 [30,7,1,0]）</label>
+            <input class="form-control" name="rules" value="{{ rules_raw }}" />
+          </div>
+          <div class="mb-3">
+            <label class="form-label">提醒邮件模板（JSON）</label>
+            <textarea class="form-control" name="email_tpl" rows="6">{{ email_tpl }}</textarea>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">续费确认模板（JSON）</label>
+            <textarea class="form-control" name="renew_tpl" rows="6">{{ renew_tpl }}</textarea>
+          </div>
+          <button class="btn btn-primary" type="submit">保存设置</button>
+        </form>
+      </div>
+    </div>
+  </div>
+  <div class="col-lg-4">
+    <div class="card shadow-sm mb-3">
+      <div class="card-header bg-white">
+        <strong>快速扫描发送</strong>
+      </div>
+      <div class="card-body">
+        <form method="post" action="{{ url_for('settings_scan') }}">
+          <label class="form-label">阈值天数（≤）</label>
+          <input class="form-control mb-3" name="threshold_days" type="number" value="30" />
+          <button class="btn btn-outline-primary w-100" type="submit">立即扫描发送</button>
+        </form>
+      </div>
+    </div>
+    <div class="card shadow-sm">
+      <div class="card-header bg-white">
+        <strong>联系方式变量</strong>
+      </div>
+      <div class="card-body small text-muted">
+        <div>CONTACT_NAME: {{ contact_name }}</div>
+        <div>CONTACT_URL: {{ contact_url }}</div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

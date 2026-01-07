@@ -1,0 +1,78 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="d-flex align-items-center justify-content-between mb-3">
+  <div>
+    <h2 class="mb-0">订阅管理</h2>
+    <div class="text-muted small">支持搜索客户/产品，手动发送提醒或续费确认</div>
+  </div>
+  <div class="d-flex gap-2">
+    <form class="d-flex gap-2" method="get">
+      <input class="form-control" name="q" placeholder="搜索客户/产品" value="{{ q }}" />
+      <button class="btn btn-outline-secondary" type="submit">搜索</button>
+    </form>
+    <a class="btn btn-primary" href="{{ url_for('subscription_new') }}">新增订阅</a>
+  </div>
+</div>
+
+<div class="card shadow-sm">
+  <div class="card-body p-0">
+    <table class="table table-hover mb-0">
+      <thead class="table-light">
+        <tr>
+          <th>客户</th>
+          <th>产品</th>
+          <th>到期日</th>
+          <th>剩余天数</th>
+          <th>备注</th>
+          <th>操作</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for item in items %}
+        <tr>
+          <td>{{ item.customer_name or "-" }}<br><small class="text-muted">{{ item.customer_email }}</small></td>
+          <td>{{ item.product_name }}</td>
+          <td>{{ item.expires_at }}</td>
+          <td>
+            <span class="badge {% if item.days_left <= 3 %}bg-danger{% elif item.days_left <= 7 %}bg-warning text-dark{% else %}bg-success{% endif %}">
+              {{ item.days_left }} 天
+            </span>
+          </td>
+          <td>{{ item.note or "-" }}</td>
+          <td>
+            <a class="btn btn-sm btn-outline-primary" href="{{ url_for('subscription_edit', subscription_id=item.id) }}">编辑</a>
+            <form class="d-inline" method="post" action="{{ url_for('subscription_send', subscription_id=item.id) }}">
+              <button class="btn btn-sm btn-outline-success" type="submit">立即提醒</button>
+            </form>
+            <form class="d-inline" method="post" action="{{ url_for('subscription_renew', subscription_id=item.id) }}">
+              <input type="hidden" name="renew_days" value="30" />
+              <button class="btn btn-sm btn-outline-warning" type="submit">续费+30天</button>
+            </form>
+            <form class="d-inline" method="post" action="{{ url_for('subscription_delete', subscription_id=item.id) }}">
+              <button class="btn btn-sm btn-outline-danger" type="submit">删除</button>
+            </form>
+          </td>
+        </tr>
+        {% else %}
+        <tr>
+          <td colspan="6" class="text-center text-muted py-4">暂无订阅</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+<nav class="mt-3">
+  <ul class="pagination justify-content-end">
+    <li class="page-item {% if page <= 1 %}disabled{% endif %}">
+      <a class="page-link" href="{{ url_for('subscriptions', q=q, page=page-1) }}">上一页</a>
+    </li>
+    <li class="page-item disabled">
+      <span class="page-link">第 {{ page }} / {{ total_pages }} 页</span>
+    </li>
+    <li class="page-item {% if page >= total_pages %}disabled{% endif %}">
+      <a class="page-link" href="{{ url_for('subscriptions', q=q, page=page+1) }}">下一页</a>
+    </li>
+  </ul>
+</nav>
+{% endblock %}

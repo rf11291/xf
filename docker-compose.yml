@@ -1,8 +1,10 @@
 services:
-  bot:
+  web:
     build: .
     restart: unless-stopped
     env_file:
       - .env
     volumes:
       - ./data:/app/data
+    ports:
+      - "8000:8000"

@@ -64,6 +64,13 @@ CREATE TABLE IF NOT EXISTS reminder_daily_sends (
   UNIQUE(subscription_id, sent_date),
   FOREIGN KEY(subscription_id) REFERENCES subscriptions(id) ON DELETE CASCADE
 );
+
+CREATE INDEX IF NOT EXISTS idx_customers_email ON customers(email);
+CREATE INDEX IF NOT EXISTS idx_products_name ON products(name);
+CREATE INDEX IF NOT EXISTS idx_subscriptions_expires ON subscriptions(expires_at);
+CREATE INDEX IF NOT EXISTS idx_subscriptions_customer ON subscriptions(customer_id);
+CREATE INDEX IF NOT EXISTS idx_subscriptions_product ON subscriptions(product_id);
+CREATE INDEX IF NOT EXISTS idx_daily_sends_date ON reminder_daily_sends(sent_date);
 '''
 
 DEFAULT_RULES = [30, 7, 1, 0]
@@ -74,7 +81,7 @@ DEFAULT_TEMPLATE = {
 <p>距离到期还剩 <b>{{ days_left }}</b> 天。</p>
 {% if product.content %}<p>备注：{{ product.content }}</p>{% endif %}
 <hr/>
-<p>如需继续续费使用，请联系 <a href="https://t.me/Stance9_bot" target="_blank" rel="noopener noreferrer">Telegram</a>。</p>
+<p>如需继续续费使用，请联系 <a href="{{ contact_url }}" target="_blank" rel="noopener noreferrer">{{ contact_name }}</a>。</p>
 <p>— {{ company }}</p>
 '''
 }
@@ -236,23 +243,51 @@ class Database:
             row = conn.execute("SELECT * FROM customers WHERE id=?", (customer_id,)).fetchone()
             return None if row is None else dict(row)
 
-    def list_customers(self, offset: int = 0, limit: int = 10) -> list[dict[str, Any]]:
+    def list_customers(self, search: str | None = None, offset: int = 0, limit: int = 10) -> list[dict[str, Any]]:
         with self._conn() as conn:
-            rows = conn.execute(
-                "SELECT * FROM customers ORDER BY id DESC LIMIT ? OFFSET ?",
-                (limit, offset),
-            ).fetchall()
+            if search:
+                q = f"%{search.lower()}%"
+                rows = conn.execute(
+                    "SELECT * FROM customers WHERE lower(email) LIKE ? OR lower(name) LIKE ? "
+                    "ORDER BY id DESC LIMIT ? OFFSET ?",
+                    (q, q, limit, offset),
+                ).fetchall()
+            else:
+                rows = conn.execute(
+                    "SELECT * FROM customers ORDER BY id DESC LIMIT ? OFFSET ?",
+                    (limit, offset),
+                ).fetchall()
             return [dict(r) for r in rows]
 
-    def count_customers(self) -> int:
+    def count_customers(self, search: str | None = None) -> int:
         with self._conn() as conn:
-            row = conn.execute("SELECT COUNT(1) AS c FROM customers").fetchone()
+            if search:
+                q = f"%{search.lower()}%"
+                row = conn.execute(
+                    "SELECT COUNT(1) AS c FROM customers WHERE lower(email) LIKE ? OR lower(name) LIKE ?",
+                    (q, q),
+                ).fetchone()
+            else:
+                row = conn.execute("SELECT COUNT(1) AS c FROM customers").fetchone()
             return int(row["c"])
 
     def delete_customer(self, customer_id: int) -> None:
         with self._conn() as conn:
             conn.execute("DELETE FROM customers WHERE id=?", (customer_id,))
             conn.commit()
+
+    def update_customer(self, customer_id: int, email: str, name: str | None) -> bool:
+        email = email.strip().lower()
+        with self._conn() as conn:
+            try:
+                conn.execute(
+                    "UPDATE customers SET email=?, name=? WHERE id=?",
+                    (email, name, customer_id),
+                )
+                conn.commit()
+                return True
+            except sqlite3.IntegrityError:
+                return False
 
     # ---------------- product catalog ----------------
     def upsert_product(self, name: str, content: str | None, conn: sqlite3.Connection | None = None) -> int:
@@ -282,17 +317,31 @@ class Database:
             row = conn.execute("SELECT * FROM products WHERE id=?", (product_id,)).fetchone()
             return None if row is None else dict(row)
 
-    def list_products(self, offset: int = 0, limit: int = 10) -> list[dict[str, Any]]:
+    def list_products(self, search: str | None = None, offset: int = 0, limit: int = 10) -> list[dict[str, Any]]:
         with self._conn() as conn:
-            rows = conn.execute(
-                "SELECT * FROM products ORDER BY id DESC LIMIT ? OFFSET ?",
-                (limit, offset),
-            ).fetchall()
+            if search:
+                q = f"%{search.lower()}%"
+                rows = conn.execute(
+                    "SELECT * FROM products WHERE lower(name) LIKE ? ORDER BY id DESC LIMIT ? OFFSET ?",
+                    (q, limit, offset),
+                ).fetchall()
+            else:
+                rows = conn.execute(
+                    "SELECT * FROM products ORDER BY id DESC LIMIT ? OFFSET ?",
+                    (limit, offset),
+                ).fetchall()
             return [dict(r) for r in rows]
 
-    def count_products(self) -> int:
+    def count_products(self, search: str | None = None) -> int:
         with self._conn() as conn:
-            row = conn.execute("SELECT COUNT(1) AS c FROM products").fetchone()
+            if search:
+                q = f"%{search.lower()}%"
+                row = conn.execute(
+                    "SELECT COUNT(1) AS c FROM products WHERE lower(name) LIKE ?",
+                    (q,),
+                ).fetchone()
+            else:
+                row = conn.execute("SELECT COUNT(1) AS c FROM products").fetchone()
             return int(row["c"])
 
     def count_subscriptions_for_product(self, product_id: int) -> int:
@@ -311,6 +360,19 @@ class Database:
             conn.execute("DELETE FROM products WHERE id=?", (product_id,))
             conn.commit()
             return True
+
+    def update_product(self, product_id: int, name: str, content: str | None) -> bool:
+        name = name.strip()
+        with self._conn() as conn:
+            try:
+                conn.execute(
+                    "UPDATE products SET name=?, content=? WHERE id=?",
+                    (name, content, product_id),
+                )
+                conn.commit()
+                return True
+            except sqlite3.IntegrityError:
+                return False
 
     # ---------------- subscriptions ----------------
     def add_subscription(
@@ -339,6 +401,14 @@ class Database:
     def update_subscription_expires(self, subscription_id: int, new_expires_at: str) -> None:
         with self._conn() as conn:
             conn.execute("UPDATE subscriptions SET expires_at=? WHERE id=?", (new_expires_at, subscription_id))
+            conn.commit()
+
+    def update_subscription(self, subscription_id: int, new_expires_at: str, note: str | None) -> None:
+        with self._conn() as conn:
+            conn.execute(
+                "UPDATE subscriptions SET expires_at=?, note=? WHERE id=?",
+                (new_expires_at, note, subscription_id),
+            )
             conn.commit()
 
     def delete_subscription(self, subscription_id: int) -> None:
@@ -377,7 +447,66 @@ class Database:
             ).fetchall()
             return [dict(r) for r in rows]
 
-    def list_all_subscription_details(self, limit: int = 5000) -> list[dict[str, Any]]:
+    def list_all_subscription_details(
+        self,
+        search: str | None = None,
+        offset: int = 0,
+        limit: int = 5000,
+    ) -> list[dict[str, Any]]:
+        with self._conn() as conn:
+            if search:
+                q = f"%{search.lower()}%"
+                rows = conn.execute(
+                    '''
+                    SELECT s.*,
+                           c.email AS customer_email, c.name AS customer_name,
+                           p.name AS product_name, p.content AS product_content
+                    FROM subscriptions s
+                    JOIN customers c ON c.id=s.customer_id
+                    JOIN products p ON p.id=s.product_id
+                    WHERE lower(c.email) LIKE ? OR lower(c.name) LIKE ? OR lower(p.name) LIKE ?
+                    ORDER BY s.expires_at ASC
+                    LIMIT ? OFFSET ?
+                    ''',
+                    (q, q, q, limit, offset),
+                ).fetchall()
+            else:
+                rows = conn.execute(
+                    '''
+                    SELECT s.*,
+                           c.email AS customer_email, c.name AS customer_name,
+                           p.name AS product_name, p.content AS product_content
+                    FROM subscriptions s
+                    JOIN customers c ON c.id=s.customer_id
+                    JOIN products p ON p.id=s.product_id
+                    ORDER BY s.expires_at ASC
+                    LIMIT ? OFFSET ?
+                    ''',
+                    (limit, offset),
+                ).fetchall()
+            return [dict(r) for r in rows]
+
+    def count_subscriptions(self, search: str | None = None) -> int:
+        with self._conn() as conn:
+            if search:
+                q = f"%{search.lower()}%"
+                row = conn.execute(
+                    '''
+                    SELECT COUNT(1) AS c
+                    FROM subscriptions s
+                    JOIN customers c ON c.id=s.customer_id
+                    JOIN products p ON p.id=s.product_id
+                    WHERE lower(c.email) LIKE ? OR lower(c.name) LIKE ? OR lower(p.name) LIKE ?
+                    ''',
+                    (q, q, q),
+                ).fetchone()
+            else:
+                row = conn.execute("SELECT COUNT(1) AS c FROM subscriptions").fetchone()
+            return int(row["c"])
+
+    def list_subscriptions_expiring_within(self, days: int, offset: int = 0, limit: int = 20) -> list[dict[str, Any]]:
+        today = dt.date.today()
+        end_date = today + dt.timedelta(days=days)
         with self._conn() as conn:
             rows = conn.execute(
                 '''
@@ -387,25 +516,37 @@ class Database:
                 FROM subscriptions s
                 JOIN customers c ON c.id=s.customer_id
                 JOIN products p ON p.id=s.product_id
+                WHERE s.expires_at >= ? AND s.expires_at <= ?
                 ORDER BY s.expires_at ASC
-                LIMIT ?
+                LIMIT ? OFFSET ?
                 ''',
-                (limit,),
+                (today.isoformat(), end_date.isoformat(), limit, offset),
             ).fetchall()
             return [dict(r) for r in rows]
 
-    def list_subscriptions_expiring_within(self, days: int, offset: int = 0, limit: int = 20) -> list[dict[str, Any]]:
-        subs = self.list_all_subscription_details(limit=5000)
-        today = dt.date.today()
-        res = []
-        for s in subs:
-            try:
-                exp = dt.date.fromisoformat(str(s["expires_at"]))
-            except Exception:
-                continue
-            if 0 <= (exp - today).days <= days:
-                res.append(s)
-        return res[offset:offset+limit]
+    def list_reminder_daily_logs(self, offset: int = 0, limit: int = 50) -> list[dict[str, Any]]:
+        with self._conn() as conn:
+            rows = conn.execute(
+                '''
+                SELECT r.sent_date, r.sent_at, r.subscription_id,
+                       c.email AS customer_email, c.name AS customer_name,
+                       p.name AS product_name,
+                       s.expires_at
+                FROM reminder_daily_sends r
+                JOIN subscriptions s ON s.id=r.subscription_id
+                JOIN customers c ON c.id=s.customer_id
+                JOIN products p ON p.id=s.product_id
+                ORDER BY r.sent_at DESC
+                LIMIT ? OFFSET ?
+                ''',
+                (limit, offset),
+            ).fetchall()
+            return [dict(r) for r in rows]
+
+    def count_reminder_daily_logs(self) -> int:
+        with self._conn() as conn:
+            row = conn.execute("SELECT COUNT(1) AS c FROM reminder_daily_sends").fetchone()
+            return int(row["c"])
 
     # ---------------- reminder sends ----------------
     def was_sent(self, subscription_id: int, days_before: int) -> bool:
