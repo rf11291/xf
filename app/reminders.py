@@ -76,6 +76,8 @@ async def _send_one(
         "threshold": int(threshold_days),
         "now": now.replace(microsecond=0).isoformat(),
         "company": cfg.company_name,
+        "contact_name": cfg.contact_name,
+        "contact_url": cfg.contact_url,
     }
 
     subject, html = render_template(template_json, context)
@@ -266,6 +268,8 @@ async def send_renewal_confirm(
             "days_left": (dt.date.fromisoformat(new_expires_at) - today).days,
             "now": now.replace(microsecond=0).isoformat(),
             "company": cfg.company_name,
+            "contact_name": cfg.contact_name,
+            "contact_url": cfg.contact_url,
             "old_expires_at": old_expires_at,
             "new_expires_at": new_expires_at,
             "renew_days": int(renew_days),
