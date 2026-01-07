@@ -16,7 +16,10 @@
 
 ### 增强能力（更完善与多样化）
 - **Web 仪表盘**：一眼看清客户、产品、订阅数量与即将到期列表
+codex/telegram-334fxt
 - **可配置到期天数**：仪表盘支持自定义展示到期范围
+=======
+main
 - **搜索与过滤**：支持按客户、邮箱、产品名称搜索
 - **提醒日志**：查看每次实际发送记录
 - **导出 CSV**：客户/产品/订阅数据一键导出
@@ -93,7 +96,10 @@ docker compose down
 | SMTP_USER | SMTP 用户 |
 | SMTP_PASS | SMTP 密码 |
 | SMTP_FROM | 发件人 |
+codex/telegram-334fxt
 | SMTP_TIMEOUT | SMTP 连接超时（秒） |
+=======
+main
 
 ---
 

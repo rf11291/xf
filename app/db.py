@@ -548,6 +548,25 @@ class Database:
             row = conn.execute("SELECT COUNT(1) AS c FROM reminder_daily_sends").fetchone()
             return int(row["c"])
 
+    def list_reminder_daily_logs(self, offset: int = 0, limit: int = 50) -> list[dict[str, Any]]:
+        with self._conn() as conn:
+            rows = conn.execute(
+                '''
+                SELECT r.sent_date, r.sent_at, r.subscription_id,
+                       c.email AS customer_email, c.name AS customer_name,
+                       p.name AS product_name,
+                       s.expires_at
+                FROM reminder_daily_sends r
+                JOIN subscriptions s ON s.id=r.subscription_id
+                JOIN customers c ON c.id=s.customer_id
+                JOIN products p ON p.id=s.product_id
+                ORDER BY r.sent_at DESC
+                LIMIT ? OFFSET ?
+                ''',
+                (limit, offset),
+            ).fetchall()
+            return [dict(r) for r in rows]
+
     # ---------------- reminder sends ----------------
     def was_sent(self, subscription_id: int, days_before: int) -> bool:
         with self._conn() as conn:
