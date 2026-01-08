@@ -1,0 +1,36 @@
+{{ define "content" }}
+<div class="card">
+  <h2>产品库管理</h2>
+  <form method="post" action="/products">
+    <label>产品名称</label>
+    <input type="text" name="name" required />
+    <label>产品说明</label>
+    <textarea name="content" rows="3"></textarea>
+    <button type="submit">添加产品</button>
+  </form>
+</div>
+
+<div class="card">
+  <h3>产品列表</h3>
+  <table>
+    <thead>
+      <tr>
+        <th>ID</th>
+        <th>名称</th>
+        <th>操作</th>
+      </tr>
+    </thead>
+    <tbody>
+      {{ range .Products }}
+      <tr>
+        <td>#{{ .ID }}</td>
+        <td>{{ .Name }}</td>
+        <td><a href="/products/{{ .ID }}">详情</a></td>
+      </tr>
+      {{ else }}
+      <tr><td colspan="3" class="muted">暂无产品</td></tr>
+      {{ end }}
+    </tbody>
+  </table>
+</div>
+{{ end }}
