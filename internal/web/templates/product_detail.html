@@ -1,0 +1,11 @@
+{{ define "content" }}
+<div class="card">
+  <h2>产品详情</h2>
+  <p><strong>名称：</strong>{{ .Product.Name }}</p>
+  <p><strong>说明：</strong>{{ .Product.Content }}</p>
+  <p><strong>创建时间：</strong>{{ .Product.CreatedAt }}</p>
+  <form class="inline" method="post" action="/products/{{ .Product.ID }}/delete">
+    <button class="secondary" type="submit">删除产品</button>
+  </form>
+</div>
+{{ end }}
