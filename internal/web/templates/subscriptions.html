@@ -1,0 +1,52 @@
+{{ define "content" }}
+<div class="card">
+  <h2>订阅管理</h2>
+  <form method="post" action="/subscriptions">
+    <label>客户</label>
+    <select name="customer_id" required>
+      {{ range .Customers }}
+      <option value="{{ .ID }}">{{ .Name }} ({{ .Email }})</option>
+      {{ end }}
+    </select>
+    <label>产品</label>
+    <select name="product_id" required>
+      {{ range .Products }}
+      <option value="{{ .ID }}">{{ .Name }}</option>
+      {{ end }}
+    </select>
+    <label>到期日</label>
+    <input type="date" name="expires_at" required />
+    <label>备注（可覆盖产品说明）</label>
+    <textarea name="note" rows="3"></textarea>
+    <button type="submit">创建订阅</button>
+  </form>
+</div>
+
+<div class="card">
+  <h3>订阅列表</h3>
+  <table>
+    <thead>
+      <tr>
+        <th>ID</th>
+        <th>客户</th>
+        <th>产品</th>
+        <th>到期日</th>
+        <th>操作</th>
+      </tr>
+    </thead>
+    <tbody>
+      {{ range .Subscriptions }}
+      <tr>
+        <td>#{{ .ID }}</td>
+        <td>{{ .CustomerName }}</td>
+        <td>{{ .ProductName }}</td>
+        <td>{{ .ExpiresAt }}</td>
+        <td><a href="/subscriptions/{{ .ID }}">详情</a></td>
+      </tr>
+      {{ else }}
+      <tr><td colspan="5" class="muted">暂无订阅</td></tr>
+      {{ end }}
+    </tbody>
+  </table>
+</div>
+{{ end }}

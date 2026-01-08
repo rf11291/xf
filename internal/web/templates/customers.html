@@ -1,0 +1,40 @@
+{{ define "content" }}
+<div class="card">
+  <h2>客户管理</h2>
+  <form method="post" action="/customers">
+    <label>邮箱</label>
+    <input type="email" name="email" required />
+    <label>姓名</label>
+    <input type="text" name="name" />
+    <button type="submit">添加客户</button>
+  </form>
+</div>
+
+<div class="card">
+  <h3>客户列表</h3>
+  <table>
+    <thead>
+      <tr>
+        <th>ID</th>
+        <th>姓名</th>
+        <th>邮箱</th>
+        <th>操作</th>
+      </tr>
+    </thead>
+    <tbody>
+      {{ range .Customers }}
+      <tr>
+        <td>#{{ .ID }}</td>
+        <td>{{ .Name }}</td>
+        <td>{{ .Email }}</td>
+        <td>
+          <a href="/customers/{{ .ID }}">详情</a>
+        </td>
+      </tr>
+      {{ else }}
+      <tr><td colspan="4" class="muted">暂无客户</td></tr>
+      {{ end }}
+    </tbody>
+  </table>
+</div>
+{{ end }}

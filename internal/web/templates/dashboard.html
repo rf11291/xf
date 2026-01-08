@@ -1,0 +1,29 @@
+{{ define "content" }}
+<div class="card">
+  <h2>数据概览</h2>
+  <div class="grid">
+    <div>
+      <div class="muted">客户数量</div>
+      <div class="stat">{{ .Stats.Customers }}</div>
+    </div>
+    <div>
+      <div class="muted">产品数量</div>
+      <div class="stat">{{ .Stats.Products }}</div>
+    </div>
+    <div>
+      <div class="muted">订阅数量</div>
+      <div class="stat">{{ .Stats.Subscriptions }}</div>
+    </div>
+  </div>
+</div>
+
+<div class="card">
+  <h3>提醒计划</h3>
+  <p class="muted">当前规则：{{ range .Rules }}<span class="pill">{{ . }} 天</span>{{ end }}</p>
+  <form method="post" action="/scan">
+    <label>立即扫描并发送（阈值天数）</label>
+    <input type="number" name="threshold" value="{{ .ScanThreshold }}" min="-1" />
+    <button type="submit">立即扫描</button>
+  </form>
+</div>
+{{ end }}

@@ -1,0 +1,21 @@
+{{ define "content" }}
+<div class="card">
+  <h2>订阅详情</h2>
+  <p><strong>客户：</strong>{{ .Subscription.CustomerName }} ({{ .Subscription.CustomerEmail }})</p>
+  <p><strong>产品：</strong>{{ .Subscription.ProductName }}</p>
+  <form method="post" action="/subscriptions/{{ .Subscription.ID }}/update">
+    <label>到期日</label>
+    <input type="date" name="expires_at" value="{{ .Subscription.ExpiresAt }}" required />
+    <label>备注</label>
+    <textarea name="note" rows="3">{{ .Subscription.Note }}</textarea>
+    <label>
+      <input type="checkbox" name="send_confirm" value="1" checked />
+      发送续费确认邮件
+    </label>
+    <button type="submit">更新订阅</button>
+  </form>
+  <form class="inline" method="post" action="/subscriptions/{{ .Subscription.ID }}/delete">
+    <button class="secondary" type="submit">删除订阅</button>
+  </form>
+</div>
+{{ end }}
