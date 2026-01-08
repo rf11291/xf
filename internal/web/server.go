@@ -5,6 +5,10 @@ import (
 	"fmt"
 	"html/template"
 	"io"
+codex-ycpf8l
+	"io/fs"
+=======
+main
 	"net/http"
 	"path"
 	"strconv"
@@ -78,7 +82,15 @@ func NewServer(cfg config.Config, store *db.Store, mailer email.Mailer) (*Server
 
 func (s *Server) Routes() http.Handler {
 	mux := http.NewServeMux()
+codex-ycpf8l
+	assetsSub, err := fs.Sub(assetsFS, "assets")
+	if err != nil {
+		panic(err)
+	}
+	mux.Handle("/assets/", http.StripPrefix("/assets/", http.FileServer(http.FS(assetsSub))))
+=======
 	mux.Handle("/assets/", http.StripPrefix("/assets/", http.FileServer(http.FS(assetsFS))))
+main
 	mux.HandleFunc("/", s.auth(s.handleDashboard))
 	mux.HandleFunc("/customers", s.auth(s.handleCustomers))
 	mux.HandleFunc("/customers/", s.auth(s.handleCustomerDetail))
