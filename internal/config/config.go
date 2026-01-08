@@ -52,7 +52,7 @@ func getEnv(key, fallback string) string {
 	if val == "" {
 		return fallback
 	}
-	return val
+
 }
 
 func getEnvInt(key string, fallback int) int {
@@ -60,7 +60,7 @@ func getEnvInt(key string, fallback int) int {
 	if val == "" {
 		return fallback
 	}
-	parsed, err := strconv.Atoi(val)
+
 	if err != nil {
 		return fallback
 	}

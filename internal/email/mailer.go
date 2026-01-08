@@ -2,7 +2,6 @@ package email
 
 import (
 	"bytes"
-	"fmt"
 	"net/smtp"
 	"strings"
 	"time"
@@ -46,7 +45,7 @@ func (m Mailer) Send(to, subject, htmlBody string) error {
 	msg.WriteString("\r\n")
 	msg.WriteString(fmt.Sprintf("--%s--\r\n", boundary))
 
-	return smtp.SendMail(addr, auth, extractAddress(m.From), []string{to}, msg.Bytes())
+
 }
 
 func extractAddress(input string) string {
