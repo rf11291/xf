@@ -1,0 +1,32 @@
+{{ define "layout" }}
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{{ .Title }} - 续费通知面板</title>
+    <link rel="stylesheet" href="/assets/style.css" />
+  </head>
+  <body>
+    <header>
+      <div>
+        <strong>续费通知面板</strong>
+        <span class="muted"> · {{ .Company }}</span>
+      </div>
+      <nav>
+        <a href="/">概览</a>
+        <a href="/customers">客户</a>
+        <a href="/products">产品库</a>
+        <a href="/subscriptions">订阅</a>
+        <a href="/settings">规则与模板</a>
+      </nav>
+    </header>
+    <main>
+      {{ if .Flash }}
+      <div class="alert">{{ .Flash }}</div>
+      {{ end }}
+      {{ template "content" . }}
+    </main>
+  </body>
+</html>
+{{ end }}

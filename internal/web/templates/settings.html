@@ -1,0 +1,32 @@
+{{ define "content" }}
+<div class="card">
+  <h2>提醒规则</h2>
+  <form method="post" action="/settings/rules">
+    <label>规则（用英文逗号分隔，例如 30,7,1,0）</label>
+    <input type="text" name="rules" value="{{ .RulesInput }}" required />
+    <button type="submit">更新规则</button>
+  </form>
+</div>
+
+<div class="card">
+  <h2>邮件模板</h2>
+  <form method="post" action="/settings/template">
+    <label>主题模板</label>
+    <input type="text" name="subject" value="{{ .Template.Subject }}" required />
+    <label>HTML 模板</label>
+    <textarea name="html" rows="10" required>{{ .Template.HTML }}</textarea>
+    <button type="submit">更新提醒模板</button>
+  </form>
+</div>
+
+<div class="card">
+  <h2>续费确认模板</h2>
+  <form method="post" action="/settings/renewal-template">
+    <label>主题模板</label>
+    <input type="text" name="subject" value="{{ .RenewalTemplate.Subject }}" required />
+    <label>HTML 模板</label>
+    <textarea name="html" rows="10" required>{{ .RenewalTemplate.HTML }}</textarea>
+    <button type="submit">更新续费模板</button>
+  </form>
+</div>
+{{ end }}
