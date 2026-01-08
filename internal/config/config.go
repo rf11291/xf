@@ -52,7 +52,7 @@ func getEnv(key, fallback string) string {
 	if val == "" {
 		return fallback
 	}
-	return stripQuotes(val)
+
 }
 
 func getEnvInt(key string, fallback int) int {
@@ -60,19 +60,10 @@ func getEnvInt(key string, fallback int) int {
 	if val == "" {
 		return fallback
 	}
-	parsed, err := strconv.Atoi(stripQuotes(val))
+
 	if err != nil {
 		return fallback
 	}
 	return parsed
 }
 
-func stripQuotes(val string) string {
-	if len(val) < 2 {
-		return val
-	}
-	if (val[0] == '"' && val[len(val)-1] == '"') || (val[0] == '\'' && val[len(val)-1] == '\'') {
-		return val[1 : len(val)-1]
-	}
-	return val
-}
