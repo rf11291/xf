@@ -1,0 +1,11 @@
+{{ define "content" }}
+<div class="card">
+  <h2>客户详情</h2>
+  <p><strong>姓名：</strong>{{ .Customer.Name }}</p>
+  <p><strong>邮箱：</strong>{{ .Customer.Email }}</p>
+  <p><strong>创建时间：</strong>{{ .Customer.CreatedAt }}</p>
+  <form class="inline" method="post" action="/customers/{{ .Customer.ID }}/delete">
+    <button class="secondary" type="submit">删除客户</button>
+  </form>
+</div>
+{{ end }}
