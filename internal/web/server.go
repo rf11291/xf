@@ -5,10 +5,7 @@ import (
 	"fmt"
 	"html/template"
 	"io"
-codex-ycpf8l
 	"io/fs"
-=======
-main
 	"net/http"
 	"path"
 	"strconv"
@@ -21,7 +18,8 @@ main
 	"xf/internal/reminder"
 )
 
-//go:embed templates/*.html assets/*
+// 建议用目录方式嵌入 assets（会递归包含 assets 下所有文件）
+//go:embed templates/*.html assets
 var assetsFS embed.FS
 
 type Server struct {
@@ -82,15 +80,15 @@ func NewServer(cfg config.Config, store *db.Store, mailer email.Mailer) (*Server
 
 func (s *Server) Routes() http.Handler {
 	mux := http.NewServeMux()
-codex-ycpf8l
+
+	// 关键修复：把 FS 限定在 assets 子目录，避免 /assets/../templates 之类泄露模板
 	assetsSub, err := fs.Sub(assetsFS, "assets")
 	if err != nil {
-		panic(err)
+		// embed 内容是编译期确定的，正常情况下不会失败；失败就尽早暴露问题
+		panic(fmt.Errorf("failed to sub assets fs: %w", err))
 	}
 	mux.Handle("/assets/", http.StripPrefix("/assets/", http.FileServer(http.FS(assetsSub))))
-=======
-	mux.Handle("/assets/", http.StripPrefix("/assets/", http.FileServer(http.FS(assetsFS))))
-main
+
 	mux.HandleFunc("/", s.auth(s.handleDashboard))
 	mux.HandleFunc("/customers", s.auth(s.handleCustomers))
 	mux.HandleFunc("/customers/", s.auth(s.handleCustomerDetail))
@@ -101,6 +99,7 @@ main
 	mux.HandleFunc("/settings", s.auth(s.handleSettings))
 	mux.HandleFunc("/settings/", s.auth(s.handleSettingsActions))
 	mux.HandleFunc("/scan", s.auth(s.handleScan))
+
 	return mux
 }
 
@@ -495,8 +494,7 @@ func (s *Server) render(w http.ResponseWriter, page string, data PageData) {
 		s.renderError(w, err)
 		return
 	}
-	err = tpl.ExecuteTemplate(w, "layout", data)
-	if err != nil {
+	if err := tpl.ExecuteTemplate(w, "layout", data); err != nil {
 		s.renderError(w, err)
 	}
 }
