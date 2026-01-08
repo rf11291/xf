@@ -17,7 +17,6 @@ import (
 	"xf/internal/reminder"
 )
 
-//go:embed templates/*.html assets/*
 var assetsFS embed.FS
 
 type Server struct {
@@ -78,7 +77,6 @@ func NewServer(cfg config.Config, store *db.Store, mailer email.Mailer) (*Server
 
 func (s *Server) Routes() http.Handler {
 	mux := http.NewServeMux()
-	mux.Handle("/assets/", http.FileServer(http.FS(assetsFS)))
 	mux.HandleFunc("/", s.auth(s.handleDashboard))
 	mux.HandleFunc("/customers", s.auth(s.handleCustomers))
 	mux.HandleFunc("/customers/", s.auth(s.handleCustomerDetail))
@@ -483,8 +481,6 @@ func (s *Server) render(w http.ResponseWriter, page string, data PageData) {
 		s.renderError(w, err)
 		return
 	}
-	err = tpl.ExecuteTemplate(w, "layout", data)
-	if err != nil {
 		s.renderError(w, err)
 	}
 }

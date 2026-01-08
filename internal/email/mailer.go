@@ -2,9 +2,6 @@ package email
 
 import (
 	"bytes"
-	"crypto/tls"
-	"fmt"
-	"net"
 	"net/smtp"
 	"strings"
 	"time"
@@ -48,51 +45,7 @@ func (m Mailer) Send(to, subject, htmlBody string) error {
 	msg.WriteString("\r\n")
 	msg.WriteString(fmt.Sprintf("--%s--\r\n", boundary))
 
-	dialer := net.Dialer{Timeout: 15 * time.Second}
-	conn, err := dialer.Dial("tcp", addr)
-	if err != nil {
-		return err
-	}
-	defer conn.Close()
-	_ = conn.SetDeadline(time.Now().Add(20 * time.Second))
 
-	client, err := smtp.NewClient(conn, m.Host)
-	if err != nil {
-		return err
-	}
-	defer client.Close()
-
-	if ok, _ := client.Extension("STARTTLS"); ok {
-		tlsConfig := &tls.Config{ServerName: m.Host}
-		if err := client.StartTLS(tlsConfig); err != nil {
-			return err
-		}
-	}
-
-	if m.User != "" && m.Pass != "" {
-		if err := client.Auth(auth); err != nil {
-			return err
-		}
-	}
-
-	if err := client.Mail(extractAddress(m.From)); err != nil {
-		return err
-	}
-	if err := client.Rcpt(to); err != nil {
-		return err
-	}
-	writer, err := client.Data()
-	if err != nil {
-		return err
-	}
-	if _, err := writer.Write(msg.Bytes()); err != nil {
-		_ = writer.Close()
-		return err
-	}
-	if err := writer.Close(); err != nil {
-		return err
-	}
-	return client.Quit()
 }
 
 func extractAddress(input string) string {
