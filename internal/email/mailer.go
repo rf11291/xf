@@ -45,7 +45,6 @@ func (m Mailer) Send(to, subject, htmlBody string) error {
 	msg.WriteString("\r\n")
 	msg.WriteString(fmt.Sprintf("--%s--\r\n", boundary))
 
-
 }
 
 func extractAddress(input string) string {
